@@ -1,6 +1,6 @@
 package taskCube;
 
-import java.util.Map;
+import java.util.Random;
 
 /**
  * @author Polina Postylyakova (poletela-na-mars)
@@ -8,25 +8,31 @@ import java.util.Map;
 
 public class CubeOfRubik {
 
-    private final static int U = 0;
-    private final static int L = 1;
-    private final static int F = 2;
-    private final static int R = 3;
-    private final static int B = 4;
-    private final static int D = 5;
+    public enum sides {
+        U(0), L(1), F(2), R(3), B(4), D(5);
 
-    public enum Cube {
-        RED, WHITE, GREEN, YELLOW, ORANGE, BLUE
+        private final int numberOfSide;
+
+        sides(int numberOfSide) {
+            this.numberOfSide = numberOfSide;
+        }
+        private int getNumberOfSide(){
+            return numberOfSide;
+        }
     }
 
-    private final static Map<Cube, Character> Colour = Map.of(
-            Cube.RED, 'R',
-            Cube.WHITE, 'W',
-            Cube.GREEN, 'G',
-            Cube.YELLOW, 'Y',
-            Cube.ORANGE, 'O',
-            Cube.BLUE, 'B'
-    );
+    public enum Cube {
+        RED('R'), WHITE('W'), GREEN('G'), YELLOW('Y'), ORANGE('O'), BLUE('B');
+
+        private final char colour;
+
+        Cube(char colour) {
+            this.colour = colour;
+        }
+        private char getColour(){
+            return colour;
+        }
+    }
 
     public Cube[][][] specification;       // [грани = 6][строка][столбец]
 
@@ -38,7 +44,7 @@ public class CubeOfRubik {
 
     CubeOfRubik(int sizeOfCube) {
         if (sizeOfCube < 2) {
-            throw new IllegalArgumentException();
+            throw new IllegalArgumentException("Некорректный размер кубика");
         }
         this.sizeOfCube = sizeOfCube;
         this.specification = new Cube[6][sizeOfCube][sizeOfCube];
@@ -56,44 +62,42 @@ public class CubeOfRubik {
      * однако мы для удобства будем апеллировать к обычным терминам "влево", "вправо", а также "вверх" и "вниз".
      */
 
-    /**
-     * Поворот грани вправо (по часовой стрелке).
-     */
+    public enum direction {
+        right('r'), left('l');
 
-    void rotateSideRight(int side) {
-        if (side > 5 || side < 0) {             // 6 граней у любого куба;
-            throw new IllegalArgumentException();
+        private final char dir;
+
+        direction(char dir) {
+            this.dir = dir;
         }
-        Cube[][] mark = new Cube[sizeOfCube][sizeOfCube];
-        for (int i = 0; i < sizeOfCube; i++) {
-            for (int j = 0; j < sizeOfCube; j++) {
-                mark[i][j] = specification[side][i][j];
-            }
-        }
-        for (int x = 0; x < sizeOfCube; x++) {
-            for (int y = 0; y < sizeOfCube; y++) {
-                specification[side][x][y] = mark[y][sizeOfCube - x - 1];
-            }
+        private int getDirection(){
+            return dir;
         }
     }
 
     /**
-     * Поворот грани влево (против часовой стрелки).
+     * Поворот грани вправо (по часовой стрелке)/влево (против часовой стрелки).
      */
 
-    void rotateSideLeft(int side) {
-        if (side > 5 || side < 0) {
-            throw new IllegalArgumentException();
-        }
+    void rotateSide(sides side, direction dir) {
         Cube[][] mark = new Cube[sizeOfCube][sizeOfCube];
         for (int i = 0; i < sizeOfCube; i++) {
             for (int j = 0; j < sizeOfCube; j++) {
-                mark[i][j] = specification[side][i][j];
+                mark[i][j] = specification[side.getNumberOfSide()][i][j];
             }
         }
-        for (int x = 0; x < sizeOfCube; x++) {
-            for (int y = 0; y < sizeOfCube; y++) {
-                specification[side][x][y] = mark[sizeOfCube - y - 1][x];
+        if (dir.getDirection() == 'r') {
+            for (int x = 0; x < sizeOfCube; x++) {
+                for (int y = 0; y < sizeOfCube; y++) {
+                    specification[side.getNumberOfSide()][x][y] = mark[y][sizeOfCube - x - 1];
+                }
+            }
+        }
+        if (dir.getDirection() == 'l') {
+            for (int x = 0; x < sizeOfCube; x++) {
+                for (int y = 0; y < sizeOfCube; y++) {
+                    specification[side.getNumberOfSide()][x][y] = mark[sizeOfCube - y - 1][x];
+                }
             }
         }
     }
@@ -104,20 +108,20 @@ public class CubeOfRubik {
 
     void rotateLayerRight(int layer) {
         if (layer > sizeOfCube - 1 || layer < 0) {
-            throw new IllegalArgumentException();
+            throw new IllegalArgumentException("Некорректный номер слоя");
         }
         if (layer == 0) {
-            rotateSideRight(U);
+            rotateSide(sides.U, direction.right);
         } else if (layer + 1 == sizeOfCube) {
-            rotateSideLeft(D);
+            rotateSide(sides.D, direction.left);
             // влево, поскольку, выбирая направление поворота,
             // мы условно смотрим на грань, которую поворачиваем
         }
-        Cube[] eq = specification[B][layer];
-        specification[B][layer] = specification[R][layer];
-        specification[R][layer] = specification[F][layer];
-        specification[F][layer] = specification[L][layer];
-        specification[L][layer] = eq;
+        Cube[] eq = specification[sides.B.getNumberOfSide()][layer];
+        specification[sides.B.getNumberOfSide()][layer] = specification[sides.R.getNumberOfSide()][layer];
+        specification[sides.R.getNumberOfSide()][layer] = specification[sides.F.getNumberOfSide()][layer];
+        specification[sides.F.getNumberOfSide()][layer] = specification[sides.L.getNumberOfSide()][layer];
+        specification[sides.L.getNumberOfSide()][layer] = eq;
     }
 
     /**
@@ -126,33 +130,28 @@ public class CubeOfRubik {
      */
 
     void rotateLayerLeft(int layer) {
-        if (layer > sizeOfCube - 1 || layer < 0) {
-            throw new IllegalArgumentException();
-        }
         for (int i = 0; i < 3; i++) {
             rotateLayerRight(layer);
         }
     }
 
     /**
-     * Методы поворота указанного числа слоя.
+     * Метод поворота указанного числа слоя вправо (по часовой стрелке)/влево (против часовой стрелки).
      */
 
-    void numberRotateLayerRight(int number, int layer) {
+    void numberRotateLayer(int number, int layer, direction dir) {
         if (number < 0) {
-            throw new IllegalArgumentException();
+            throw new IllegalArgumentException("Некорректное число поворотов слоя");
         }
-        for (int i = 0; i < number; i++) {
-            rotateLayerRight(layer);
+        if (dir.getDirection() == 'r') {
+            for (int i = 0; i < number; i++) {
+                rotateLayerRight(layer);
+            }
         }
-    }
-
-    void numberRotateLayerLeft(int number, int layer) {
-        if (number < 0) {
-            throw new IllegalArgumentException();
-        }
-        for (int i = 0; i < number; i++) {
-            rotateLayerLeft(layer);
+        if (dir.getDirection() == 'l') {
+            for (int i = 0; i < number; i++) {
+                rotateLayerLeft(layer);
+            }
         }
     }
 
@@ -181,13 +180,13 @@ public class CubeOfRubik {
      */
 
     private void rotateCubeUp() {
-        Cube[][] eq = specification[F];
-        specification[F] = specification[D];
-        specification[D] = specification[B];
-        specification[B] = specification[U];
-        specification[U] = eq;
-        rotateSideLeft(R);
-        rotateSideRight(L);
+        Cube[][] eq = specification[sides.F.getNumberOfSide()];
+        specification[sides.F.getNumberOfSide()] = specification[sides.D.getNumberOfSide()];
+        specification[sides.D.getNumberOfSide()] = specification[sides.B.getNumberOfSide()];
+        specification[sides.B.getNumberOfSide()] = specification[sides.U.getNumberOfSide()];
+        specification[sides.U.getNumberOfSide()] = eq;
+        rotateSide(sides.R, direction.left);
+        rotateSide(sides.L, direction.right);
     }
 
     /**
@@ -195,13 +194,13 @@ public class CubeOfRubik {
      */
 
     private void rotateCubeDown() {
-        Cube[][] eq = specification[F];
-        specification[F] = specification[U];
-        specification[U] = specification[B];
-        specification[B] = specification[D];
-        specification[D] = eq;
-        rotateSideLeft(L);
-        rotateSideRight(R);
+        Cube[][] eq = specification[sides.F.getNumberOfSide()];
+        specification[sides.F.getNumberOfSide()] = specification[sides.U.getNumberOfSide()];
+        specification[sides.U.getNumberOfSide()] = specification[sides.B.getNumberOfSide()];
+        specification[sides.B.getNumberOfSide()] = specification[sides.D.getNumberOfSide()];
+        specification[sides.D.getNumberOfSide()] = eq;
+        rotateSide(sides.L, direction.left);
+        rotateSide(sides.R, direction.right);
     }
 
     /**
@@ -212,7 +211,7 @@ public class CubeOfRubik {
         StringBuilder strBuilder = new StringBuilder();
         for (int x = 0; x < sizeOfCube; x++) {
             for (int y = 0; y < sizeOfCube; y++) {
-                strBuilder.append(Colour.get(specification[side][x][y]));  // поиск по ключам
+                strBuilder.append(specification[side][x][y].getColour());
                 strBuilder.append("  ");
             }
             strBuilder.append("   ");
@@ -225,12 +224,10 @@ public class CubeOfRubik {
      * Установка выбранной грани в качестве верхней. Также подходит нам для тестирования многих вышеперечисленных методов.
      */
 
-    void turnToUpSide(int side) {
-        if (side == 0) {
-            throw new IllegalArgumentException();
-            // бессмысленно делать верхнюю грань верхней
-        }
+    void turnToUpSide(sides side) {
         switch (side) {
+            case U -> {     //  игнорируем попытку сделать верхнюю грань верхней
+            }
             case L -> {
                 rotateCubeRight();
                 rotateCubeUp();
@@ -256,29 +253,33 @@ public class CubeOfRubik {
      * В нашем случае используется отчасти определенная последовательность и отчасти случайная, что позволяет добиться
      * достаточно корректного перемшивания кубика любого размера. Алгоритм, представленный ниже,
      * является абсолютно случайным, создан без использования каких-либо известных шаблонов.
-     * Это производится с помощью метода Math.random().
+     * Это производится с помощью класса Random.
      */
 
+    int rand() {
+        int min = 0;
+        int max = 3;
+        int diff = max - min;
+        Random random = new Random();
+        return random.nextInt(diff + 1);
+    }
+
     public void randomInst() {
-        int number = (int) (Math.random() * 3);  // [0; 3)
-        for (int i = 1; i < 3 + number; i++) {
-            int z = (int) (Math.random() * 3);
-            for (int j = 0; j < z; j++) {
+        for (int i = 1; i < 3 + rand(); i++) {
+            for (int j = 0; j < rand(); j++) {
                 rotateLayerRight(0);
-                rotateSideRight(D);
-                rotateSideLeft(R);
+                rotateSide(sides.D, direction.right);
+                rotateSide(sides.R, direction.left);
             }
-            z = (int) (Math.random() * 3);
-            for (int j = 0; j < z; j++) {
+            for (int j = 0; j < rand(); j++) {
                 rotateLayerRight(sizeOfCube - 1);
-                rotateSideRight(L);
-                rotateSideLeft(U);
+                rotateSide(sides.L, direction.right);
+                rotateSide(sides.U, direction.left);
             }
-            z = (int) (Math.random() * 3);
-            for (int j = 0; j < z; j++) {
+            for (int j = 0; j < rand(); j++) {
                 rotateLayerRight(sizeOfCube - 2);
-                rotateSideRight(F);
-                rotateSideLeft(B);
+                rotateSide(sides.F, direction.right);
+                rotateSide(sides.B, direction.left);
             }
         }
     }
@@ -294,7 +295,7 @@ public class CubeOfRubik {
         for (int x = 0; x < sizeOfCube; x++) {
             for (int s = 0; s < 6; s++) {
                 for (int y = 0; y < sizeOfCube; y++) {
-                    strBuilder.append(Colour.get(specification[s][x][y]));  // поиск по ключам
+                    strBuilder.append(specification[s][x][y].getColour());
                     strBuilder.append("  ");
                 }
                 strBuilder.append("   ");
