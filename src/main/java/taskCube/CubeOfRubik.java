@@ -8,12 +8,12 @@ import java.util.Random;
 
 public class CubeOfRubik {
 
-    public enum sides {
+    public enum Sides {
         U(0), L(1), F(2), R(3), B(4), D(5);
 
         private final int numberOfSide;
 
-        sides(int numberOfSide) {
+        Sides(int numberOfSide) {
             this.numberOfSide = numberOfSide;
         }
         private int getNumberOfSide(){
@@ -62,12 +62,12 @@ public class CubeOfRubik {
      * однако мы для удобства будем апеллировать к обычным терминам "влево", "вправо", а также "вверх" и "вниз".
      */
 
-    public enum direction {
+    public enum Direction {
         right('r'), left('l');
 
         private final char dir;
 
-        direction(char dir) {
+        Direction(char dir) {
             this.dir = dir;
         }
         private int getDirection(){
@@ -79,21 +79,21 @@ public class CubeOfRubik {
      * Поворот грани вправо (по часовой стрелке)/влево (против часовой стрелки).
      */
 
-    void rotateSide(sides side, direction dir) {
+    void rotateSide(Sides side, Direction dir) {
         Cube[][] mark = new Cube[sizeOfCube][sizeOfCube];
         for (int i = 0; i < sizeOfCube; i++) {
             for (int j = 0; j < sizeOfCube; j++) {
                 mark[i][j] = specification[side.getNumberOfSide()][i][j];
             }
         }
-        if (dir.getDirection() == 'r') {
+        if (dir == Direction.right) {
             for (int x = 0; x < sizeOfCube; x++) {
                 for (int y = 0; y < sizeOfCube; y++) {
                     specification[side.getNumberOfSide()][x][y] = mark[y][sizeOfCube - x - 1];
                 }
             }
         }
-        if (dir.getDirection() == 'l') {
+        if (dir == Direction.left) {
             for (int x = 0; x < sizeOfCube; x++) {
                 for (int y = 0; y < sizeOfCube; y++) {
                     specification[side.getNumberOfSide()][x][y] = mark[sizeOfCube - y - 1][x];
@@ -111,17 +111,17 @@ public class CubeOfRubik {
             throw new IllegalArgumentException("Некорректный номер слоя");
         }
         if (layer == 0) {
-            rotateSide(sides.U, direction.right);
+            rotateSide(Sides.U, Direction.right);
         } else if (layer + 1 == sizeOfCube) {
-            rotateSide(sides.D, direction.left);
+            rotateSide(Sides.D, Direction.left);
             // влево, поскольку, выбирая направление поворота,
             // мы условно смотрим на грань, которую поворачиваем
         }
-        Cube[] eq = specification[sides.B.getNumberOfSide()][layer];
-        specification[sides.B.getNumberOfSide()][layer] = specification[sides.R.getNumberOfSide()][layer];
-        specification[sides.R.getNumberOfSide()][layer] = specification[sides.F.getNumberOfSide()][layer];
-        specification[sides.F.getNumberOfSide()][layer] = specification[sides.L.getNumberOfSide()][layer];
-        specification[sides.L.getNumberOfSide()][layer] = eq;
+        Cube[] eq = specification[Sides.B.getNumberOfSide()][layer];
+        specification[Sides.B.getNumberOfSide()][layer] = specification[Sides.R.getNumberOfSide()][layer];
+        specification[Sides.R.getNumberOfSide()][layer] = specification[Sides.F.getNumberOfSide()][layer];
+        specification[Sides.F.getNumberOfSide()][layer] = specification[Sides.L.getNumberOfSide()][layer];
+        specification[Sides.L.getNumberOfSide()][layer] = eq;
     }
 
     /**
@@ -139,16 +139,16 @@ public class CubeOfRubik {
      * Метод поворота указанного числа слоя вправо (по часовой стрелке)/влево (против часовой стрелки).
      */
 
-    void numberRotateLayer(int number, int layer, direction dir) {
+    void numberRotateLayer(int number, int layer, Direction dir) {
         if (number < 0) {
             throw new IllegalArgumentException("Некорректное число поворотов слоя");
         }
-        if (dir.getDirection() == 'r') {
+        if (dir == Direction.right) {
             for (int i = 0; i < number; i++) {
                 rotateLayerRight(layer);
             }
         }
-        if (dir.getDirection() == 'l') {
+        if (dir == Direction.left) {
             for (int i = 0; i < number; i++) {
                 rotateLayerLeft(layer);
             }
@@ -180,13 +180,13 @@ public class CubeOfRubik {
      */
 
     private void rotateCubeUp() {
-        Cube[][] eq = specification[sides.F.getNumberOfSide()];
-        specification[sides.F.getNumberOfSide()] = specification[sides.D.getNumberOfSide()];
-        specification[sides.D.getNumberOfSide()] = specification[sides.B.getNumberOfSide()];
-        specification[sides.B.getNumberOfSide()] = specification[sides.U.getNumberOfSide()];
-        specification[sides.U.getNumberOfSide()] = eq;
-        rotateSide(sides.R, direction.left);
-        rotateSide(sides.L, direction.right);
+        Cube[][] eq = specification[Sides.F.getNumberOfSide()];
+        specification[Sides.F.getNumberOfSide()] = specification[Sides.D.getNumberOfSide()];
+        specification[Sides.D.getNumberOfSide()] = specification[Sides.B.getNumberOfSide()];
+        specification[Sides.B.getNumberOfSide()] = specification[Sides.U.getNumberOfSide()];
+        specification[Sides.U.getNumberOfSide()] = eq;
+        rotateSide(Sides.R, Direction.left);
+        rotateSide(Sides.L, Direction.right);
     }
 
     /**
@@ -194,13 +194,13 @@ public class CubeOfRubik {
      */
 
     private void rotateCubeDown() {
-        Cube[][] eq = specification[sides.F.getNumberOfSide()];
-        specification[sides.F.getNumberOfSide()] = specification[sides.U.getNumberOfSide()];
-        specification[sides.U.getNumberOfSide()] = specification[sides.B.getNumberOfSide()];
-        specification[sides.B.getNumberOfSide()] = specification[sides.D.getNumberOfSide()];
-        specification[sides.D.getNumberOfSide()] = eq;
-        rotateSide(sides.L, direction.left);
-        rotateSide(sides.R, direction.right);
+        Cube[][] eq = specification[Sides.F.getNumberOfSide()];
+        specification[Sides.F.getNumberOfSide()] = specification[Sides.U.getNumberOfSide()];
+        specification[Sides.U.getNumberOfSide()] = specification[Sides.B.getNumberOfSide()];
+        specification[Sides.B.getNumberOfSide()] = specification[Sides.D.getNumberOfSide()];
+        specification[Sides.D.getNumberOfSide()] = eq;
+        rotateSide(Sides.L, Direction.left);
+        rotateSide(Sides.R, Direction.right);
     }
 
     /**
@@ -224,7 +224,7 @@ public class CubeOfRubik {
      * Установка выбранной грани в качестве верхней. Также подходит нам для тестирования многих вышеперечисленных методов.
      */
 
-    void turnToUpSide(sides side) {
+    void turnToUpSide(Sides side) {
         switch (side) {
             case U -> {     //  игнорируем попытку сделать верхнюю грань верхней
             }
@@ -256,11 +256,12 @@ public class CubeOfRubik {
      * Это производится с помощью класса Random.
      */
 
+    Random random = new Random();
+
     int rand() {
         int min = 0;
         int max = 3;
         int diff = max - min;
-        Random random = new Random();
         return random.nextInt(diff + 1);
     }
 
@@ -268,18 +269,18 @@ public class CubeOfRubik {
         for (int i = 1; i < 3 + rand(); i++) {
             for (int j = 0; j < rand(); j++) {
                 rotateLayerRight(0);
-                rotateSide(sides.D, direction.right);
-                rotateSide(sides.R, direction.left);
+                rotateSide(Sides.D, Direction.right);
+                rotateSide(Sides.R, Direction.left);
             }
             for (int j = 0; j < rand(); j++) {
                 rotateLayerRight(sizeOfCube - 1);
-                rotateSide(sides.L, direction.right);
-                rotateSide(sides.U, direction.left);
+                rotateSide(Sides.L, Direction.right);
+                rotateSide(Sides.U, Direction.left);
             }
             for (int j = 0; j < rand(); j++) {
                 rotateLayerRight(sizeOfCube - 2);
-                rotateSide(sides.F, direction.right);
-                rotateSide(sides.B, direction.left);
+                rotateSide(Sides.F, Direction.right);
+                rotateSide(Sides.B, Direction.left);
             }
         }
     }
